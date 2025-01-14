@@ -174,7 +174,7 @@ export default function MonitoringDashboard() {
                         ? `${down.toFixed(2)}M/s`
                         : `${(down * 1024).toFixed(2)}K/s`}
                   </td>
-                  <td className="p-1 sm:p-2">
+                  <td className="p-1 sm:p-2 text-nowrap">
                     {formatBytes(net_out_transfer)} |{" "}
                     {formatBytes(net_in_transfer)}
                   </td>
@@ -185,7 +185,10 @@ export default function MonitoringDashboard() {
                   </td>
                   <td className="p-1 sm:p-2">{Number(load_1).toFixed(2)}</td>
                   <td className="p-1 sm:p-2">
-                    <Badge variant={online ? "success" : "destructive"}>
+                    <Badge
+                      className="text-[10px]"
+                      variant={online ? "success" : "destructive"}
+                    >
                       {online ? "Online" : "Offline"}
                     </Badge>
                   </td>

@@ -29,7 +29,7 @@ jobs:
           bun run build
 
       - name: change output folder name
-        run: mv out dist    
+        run: mv out dist
 
       - name: Compress dist folder
         run: zip -r dist.zip dist
