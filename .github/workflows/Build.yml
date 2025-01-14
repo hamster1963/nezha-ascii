@@ -28,8 +28,11 @@ jobs:
         run: |
           bun run build
 
-      - name: Compress out folder
-        run: zip -r dist.zip out
+      - name: change output folder name
+        run: mv out dist    
+
+      - name: Compress dist folder
+        run: zip -r dist.zip dist
 
       - name: Release
         uses: softprops/action-gh-release@v2
