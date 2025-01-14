@@ -131,7 +131,7 @@ export default function MonitoringDashboard() {
                     <ServerFlag country_code={country_code} /> {name}
                   </td>
                   <td className="p-1 sm:p-2">
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-1 mr-1">
                       <Progress value={cpu} className="w-14" />
                       <span
                         className={`w-[30px] text-right ${cpu > 80 ? "text-red-500" : "text-green-500"}`}
@@ -141,7 +141,7 @@ export default function MonitoringDashboard() {
                     </div>
                   </td>
                   <td className="p-1 sm:p-2">
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-1 mr-1">
                       <Progress value={mem} className="w-14" />
                       <span
                         className={`w-[30px] text-right ${mem > 80 ? "text-red-500" : "text-green-500"}`}
@@ -151,7 +151,7 @@ export default function MonitoringDashboard() {
                     </div>
                   </td>
                   <td className="p-1 sm:p-2">
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-1 mr-1">
                       <Progress value={stg} className="w-14" />
                       <span
                         className={`w-[30px] text-right ${stg > 80 ? "text-red-500" : "text-green-500"}`}
@@ -160,14 +160,14 @@ export default function MonitoringDashboard() {
                       </span>
                     </div>
                   </td>
-                  <td className="p-1 sm:p-2">
+                  <td className="p-1 sm:p-2 min-w-[80px]">
                     {up >= 1024
                       ? `${(up / 1024).toFixed(2)}G/s`
                       : up >= 1
                         ? `${up.toFixed(2)}M/s`
                         : `${(up * 1024).toFixed(2)}K/s`}
                   </td>
-                  <td className="p-1 sm:p-2">
+                  <td className="p-1 sm:p-2 min-w-[80px]">
                     {down >= 1024
                       ? `${(down / 1024).toFixed(2)}G/s`
                       : down >= 1
@@ -178,7 +178,7 @@ export default function MonitoringDashboard() {
                     {formatBytes(net_out_transfer)} |{" "}
                     {formatBytes(net_in_transfer)}
                   </td>
-                  <td className="p-1 sm:p-2">
+                  <td className="p-1 sm:p-2 min-w-[55px]">
                     {uptime / 86400 >= 1
                       ? `${(uptime / 86400).toFixed(0)} ${"days"}`
                       : `${(uptime / 3600).toFixed(0)} ${"hours"}`}
