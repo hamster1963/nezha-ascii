@@ -7,7 +7,7 @@ import { formatBytes, formatNezhaInfo } from "@/lib/utils";
 import { useWebSocketContext } from "@/lib/websocketProvider";
 import { NezhaWebsocketResponse } from "@/types/nezha-api";
 import { DateTime } from "luxon";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function MonitoringDashboard() {
   const { message } = useWebSocketContext();
@@ -209,7 +209,7 @@ export default function MonitoringDashboard() {
       <div className="mt-2 sm:mt-4 text-[10px] sm:text-xs text-green-600 flex flex-col items-center sm:flex-row sm:justify-between">
         <section className="flex flex-col">
           <a href="https://github.com/nezhahq/nezha">Powered by Nezha</a>
-          <a>Designed by @Hamster1963</a>
+          <a href="https://buycoffee.top">Designed by @Hamster1963</a>
         </section>
         <a href={"/dashboard"} className="underline">
           {">Dashboard"}
