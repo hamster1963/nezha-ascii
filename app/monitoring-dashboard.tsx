@@ -3,9 +3,11 @@
 import ServerFlag from "@/components/ServerFlag";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { formatNezhaInfo } from "@/lib/utils";
+import { formatBytes, formatNezhaInfo } from "@/lib/utils";
 import { useWebSocketContext } from "@/lib/websocketProvider";
 import { NezhaWebsocketResponse } from "@/types/nezha-api";
+import { DateTime } from "luxon";
+import { useEffect, useRef, useState } from "react";
 
 export default function MonitoringDashboard() {
   const { message } = useWebSocketContext();
@@ -30,6 +32,40 @@ export default function MonitoringDashboard() {
       (server) => !formatNezhaInfo(messageData.now, server).online,
     )?.length || 0;
 
+  const upTotal =
+    messageData.servers.reduce(
+      (total, server) =>
+        formatNezhaInfo(messageData.now, server).online
+          ? total + (server.state?.net_out_transfer ?? 0)
+          : total,
+      0,
+    ) || 0;
+  const downTotal =
+    messageData.servers.reduce(
+      (total, server) =>
+        formatNezhaInfo(messageData.now, server).online
+          ? total + (server.state?.net_in_transfer ?? 0)
+          : total,
+      0,
+    ) || 0;
+
+  const upSpeed =
+    messageData.servers.reduce(
+      (total, server) =>
+        formatNezhaInfo(messageData.now, server).online
+          ? total + (server.state?.net_out_speed ?? 0)
+          : total,
+      0,
+    ) || 0;
+  const downSpeed =
+    messageData.servers.reduce(
+      (total, server) =>
+        formatNezhaInfo(messageData.now, server).online
+          ? total + (server.state?.net_in_speed ?? 0)
+          : total,
+      0,
+    ) || 0;
+
   return (
     <div className="min-h-screen bg-black text-green-500 p-1 sm:p-2 font-mono text-xs">
       {/* Header Stats */}
@@ -38,7 +74,10 @@ export default function MonitoringDashboard() {
           { label: "Total Servers", value: totalServers },
           { label: "Online", value: onlineServers, color: "text-green-400" },
           { label: "Offline", value: offlineServers, color: "text-red-500" },
-          { label: "Network Traffic", value: "↑ 4.84 TiB ↓ 6.35 TiB" },
+          {
+            label: "Network Traffic",
+            value: `↑ ${formatBytes(upTotal)} ↓ ${formatBytes(downTotal)}`,
+          },
         ].map((stat, index) => (
           <div
             key={index}
@@ -63,6 +102,7 @@ export default function MonitoringDashboard() {
               <th className="p-1 sm:p-2">Storage</th>
               <th className="p-1 sm:p-2">Upload</th>
               <th className="p-1 sm:p-2">Download</th>
+              <th className="p-1 sm:p-2">Traffic</th>
               <th className="p-1 sm:p-2">Uptime</th>
               <th className="p-1 sm:p-2">Load</th>
               <th className="p-1 sm:p-2">Status</th>
@@ -94,7 +134,7 @@ export default function MonitoringDashboard() {
                     <div className="flex items-center gap-1">
                       <Progress value={cpu} className="w-14" />
                       <span
-                        className={`w-12 text-right ${cpu > 80 ? "text-red-500" : "text-green-500"}`}
+                        className={`w-[30px] text-right ${cpu > 80 ? "text-red-500" : "text-green-500"}`}
                       >
                         {cpu.toFixed(2)}%
                       </span>
@@ -104,7 +144,7 @@ export default function MonitoringDashboard() {
                     <div className="flex items-center gap-1">
                       <Progress value={mem} className="w-14" />
                       <span
-                        className={`w-12 text-right ${mem > 80 ? "text-red-500" : "text-green-500"}`}
+                        className={`w-[30px] text-right ${mem > 80 ? "text-red-500" : "text-green-500"}`}
                       >
                         {mem.toFixed(2)}%
                       </span>
@@ -114,7 +154,7 @@ export default function MonitoringDashboard() {
                     <div className="flex items-center gap-1">
                       <Progress value={stg} className="w-14" />
                       <span
-                        className={`w-12 text-right ${stg > 80 ? "text-red-500" : "text-green-500"}`}
+                        className={`w-[30px] text-right ${stg > 80 ? "text-red-500" : "text-green-500"}`}
                       >
                         {stg.toFixed(2)}%
                       </span>
@@ -133,6 +173,10 @@ export default function MonitoringDashboard() {
                       : down >= 1
                         ? `${down.toFixed(2)}M/s`
                         : `${(down * 1024).toFixed(2)}K/s`}
+                  </td>
+                  <td className="p-1 sm:p-2">
+                    {formatBytes(net_out_transfer)} |{" "}
+                    {formatBytes(net_in_transfer)}
                   </td>
                   <td className="p-1 sm:p-2">
                     {uptime / 86400 >= 1
@@ -154,9 +198,38 @@ export default function MonitoringDashboard() {
 
       {/* Time and Network Stats */}
       <div className="mt-2 sm:mt-4 text-[10px] sm:text-xs text-green-600 flex flex-col sm:flex-row sm:justify-between">
-        <div>Current time: 2:28:25 PM</div>
-        <div>Network Speed: ↑ 4.23 MiB/s ↓ 3.15 MiB/s</div>
+        <CurrentTime />
+        <div>
+          Network Speed: ↑ {formatBytes(upSpeed)}/s ↓ {formatBytes(downSpeed)}/s
+        </div>
+      </div>
+      <div className="mt-2 sm:mt-4 text-[10px] sm:text-xs text-green-600 flex flex-col items-center sm:flex-row sm:justify-between">
+        <section className="flex flex-col">
+          <a href="https://github.com/nezhahq/nezha">Powered by Nezha</a>
+          <a>Designed by @Hamster1963</a>
+        </section>
+        <a href={"/dashboard"} className="underline">
+          {">Dashboard"}
+        </a>
       </div>
     </div>
   );
+}
+
+function CurrentTime() {
+  const timeOption = DateTime.TIME_WITH_SECONDS;
+  timeOption.hour12 = true;
+  const [timeString, setTimeString] = useState(
+    DateTime.now().setLocale("en-US").toLocaleString(timeOption),
+  );
+  useEffect(() => {
+    const updateTime = () => {
+      const now = DateTime.now().setLocale("en-US").toLocaleString(timeOption);
+      setTimeString(now);
+      requestAnimationFrame(updateTime);
+    };
+    requestAnimationFrame(updateTime);
+  }, []);
+
+  return <div>Current time: {timeString}</div>;
 }
