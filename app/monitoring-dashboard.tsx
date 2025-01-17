@@ -278,7 +278,7 @@ function ServerDetails({ now, server }: ServerDetailsProps) {
     <div className="flex gap-4 sm:text-xs text-[10px] flex-wrap">
       <div className="space-y-1">
         <h3 className="font-bold text-green-400">System Info</h3>
-        <p>Platform: {platform}</p>
+        <p>Platform: {platform || "N/A"}</p>
         <p>Kernel: {platform_version || "N/A"}</p>
         <p>Arch: {arch || "N/A"}</p>
       </div>
@@ -301,8 +301,8 @@ function ServerDetails({ now, server }: ServerDetailsProps) {
       <div className="space-y-1">
         <h3 className="font-bold text-green-400">Agent Info</h3>
         <p>Version: {version || "N/A"}</p>
-        <p>Last Check-In: {last_active_time_string || "N/A"}</p>
-        <p>Country: {country_code.toUpperCase() || "N/A"}</p>
+        <p>Last Active: {last_active_time_string || "N/A"}</p>
+        <p>Country: {country_code ? country_code.toUpperCase() : "N/A"}</p>
       </div>
     </div>
   );
