@@ -9,7 +9,11 @@ interface WebSocketProviderProps {
 const WebSocketContext = createContext<WebSocketHook | undefined>(undefined);
 
 export const WebSocketProvider = ({ children }: WebSocketProviderProps) => {
-  const ws = useWebSocket("/api/v1/ws/server");
+  const wsEndpoint =
+    process.env.NODE_ENV !== "development"
+      ? "/api/v1/ws/server"
+      : "ws://localhost:8084/ws";
+  const ws = useWebSocket(wsEndpoint);
   return (
     <WebSocketContext.Provider value={ws}>{children}</WebSocketContext.Provider>
   );

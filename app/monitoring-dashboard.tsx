@@ -3,14 +3,16 @@
 import ServerFlag from "@/components/ServerFlag";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { formatBytes, formatNezhaInfo } from "@/lib/utils";
+import { cn, formatBytes, formatNezhaInfo } from "@/lib/utils";
 import { useWebSocketContext } from "@/lib/websocketProvider";
-import { NezhaWebsocketResponse } from "@/types/nezha-api";
+import { NezhaServer, NezhaWebsocketResponse } from "@/types/nezha-api";
 import { DateTime } from "luxon";
 import { useEffect, useState } from "react";
+import { ChevronDown, ChevronUp } from "lucide-react";
 
 export default function MonitoringDashboard() {
   const { message } = useWebSocketContext();
+  const [expandedServer, setExpandedServer] = useState<string | null>(null);
 
   const messageData = JSON.parse(message) as NezhaWebsocketResponse;
 
@@ -84,7 +86,11 @@ export default function MonitoringDashboard() {
             className="border border-green-800 bg-black/50 p-1 sm:p-2 rounded"
           >
             <div className="text-[10px] text-green-600">{stat.label}</div>
-            <div className={`text-sm sm:text-base ${stat.color || ""}`}>
+            <div
+              className={cn("text-sm sm:text-base", stat.color || "", {
+                "sm:text-sm lg:text-base": stat.label === "Network Traffic",
+              })}
+            >
               {stat.value}
             </div>
           </div>
@@ -119,80 +125,107 @@ export default function MonitoringDashboard() {
                 down,
                 mem,
                 stg,
-                platform,
                 uptime,
                 net_in_transfer,
                 net_out_transfer,
                 load_1,
               } = formatNezhaInfo(messageData.now, server);
+
+              const isExpanded = expandedServer === server.name;
+
               return (
-                <tr key={server.name} className="border-t border-green-800/30">
-                  <td className="p-1 sm:p-2 min-w-36">
-                    <ServerFlag country_code={country_code} /> {name}
-                  </td>
-                  <td className="p-1 sm:p-2">
-                    <div className="flex items-center gap-1 mr-1">
-                      <Progress value={cpu} className="w-14" />
-                      <span
-                        className={`w-[30px] text-right ${cpu > 80 ? "text-red-500" : "text-green-500"}`}
+                <>
+                  <tr
+                    key={server.name}
+                    className={cn(
+                      "border-t border-green-800/30 cursor-pointer hover:bg-green-900/10",
+                      isExpanded && "bg-green-900/20",
+                    )}
+                    onClick={() =>
+                      setExpandedServer(isExpanded ? null : server.name)
+                    }
+                  >
+                    <td className="p-1 sm:p-2 min-w-36">
+                      <div className="flex items-center gap-1">
+                        {isExpanded ? (
+                          <ChevronUp className="w-3 h-3" />
+                        ) : (
+                          <ChevronDown className="w-3 h-3" />
+                        )}
+                        <ServerFlag country_code={country_code} /> {name}
+                      </div>
+                    </td>
+                    <td className="p-1 sm:p-2">
+                      <div className="flex items-center gap-1 mr-1">
+                        <Progress value={cpu} className="w-14" />
+                        <span
+                          className={`w-[30px] text-right ${cpu > 80 ? "text-red-500" : "text-green-500"}`}
+                        >
+                          {cpu.toFixed(2)}%
+                        </span>
+                      </div>
+                    </td>
+                    <td className="p-1 sm:p-2">
+                      <div className="flex items-center gap-1 mr-1">
+                        <Progress value={mem} className="w-14" />
+                        <span
+                          className={`w-[30px] text-right ${mem > 80 ? "text-red-500" : "text-green-500"}`}
+                        >
+                          {mem.toFixed(2)}%
+                        </span>
+                      </div>
+                    </td>
+                    <td className="p-1 sm:p-2">
+                      <div className="flex items-center gap-1 mr-1">
+                        <Progress value={stg} className="w-14" />
+                        <span
+                          className={`w-[30px] text-right ${stg > 80 ? "text-red-500" : "text-green-500"}`}
+                        >
+                          {stg.toFixed(2)}%
+                        </span>
+                      </div>
+                    </td>
+                    <td className="p-1 sm:p-2 min-w-[80px]">
+                      {up >= 1024
+                        ? `${(up / 1024).toFixed(2)}G/s`
+                        : up >= 1
+                          ? `${up.toFixed(2)}M/s`
+                          : `${(up * 1024).toFixed(2)}K/s`}
+                    </td>
+                    <td className="p-1 sm:p-2 min-w-[80px]">
+                      {down >= 1024
+                        ? `${(down / 1024).toFixed(2)}G/s`
+                        : down >= 1
+                          ? `${down.toFixed(2)}M/s`
+                          : `${(down * 1024).toFixed(2)}K/s`}
+                    </td>
+                    <td className="p-1 sm:p-2 text-nowrap">
+                      {formatBytes(net_out_transfer)} |{" "}
+                      {formatBytes(net_in_transfer)}
+                    </td>
+                    <td className="p-1 sm:p-2 min-w-[55px]">
+                      {uptime / 86400 >= 1
+                        ? `${(uptime / 86400).toFixed(0)} ${"days"}`
+                        : `${(uptime / 3600).toFixed(0)} ${"hours"}`}
+                    </td>
+                    <td className="p-1 sm:p-2">{Number(load_1).toFixed(2)}</td>
+                    <td className="p-1 sm:p-2">
+                      <Badge
+                        className="text-[10px]"
+                        variant={online ? "success" : "destructive"}
                       >
-                        {cpu.toFixed(2)}%
-                      </span>
-                    </div>
-                  </td>
-                  <td className="p-1 sm:p-2">
-                    <div className="flex items-center gap-1 mr-1">
-                      <Progress value={mem} className="w-14" />
-                      <span
-                        className={`w-[30px] text-right ${mem > 80 ? "text-red-500" : "text-green-500"}`}
-                      >
-                        {mem.toFixed(2)}%
-                      </span>
-                    </div>
-                  </td>
-                  <td className="p-1 sm:p-2">
-                    <div className="flex items-center gap-1 mr-1">
-                      <Progress value={stg} className="w-14" />
-                      <span
-                        className={`w-[30px] text-right ${stg > 80 ? "text-red-500" : "text-green-500"}`}
-                      >
-                        {stg.toFixed(2)}%
-                      </span>
-                    </div>
-                  </td>
-                  <td className="p-1 sm:p-2 min-w-[80px]">
-                    {up >= 1024
-                      ? `${(up / 1024).toFixed(2)}G/s`
-                      : up >= 1
-                        ? `${up.toFixed(2)}M/s`
-                        : `${(up * 1024).toFixed(2)}K/s`}
-                  </td>
-                  <td className="p-1 sm:p-2 min-w-[80px]">
-                    {down >= 1024
-                      ? `${(down / 1024).toFixed(2)}G/s`
-                      : down >= 1
-                        ? `${down.toFixed(2)}M/s`
-                        : `${(down * 1024).toFixed(2)}K/s`}
-                  </td>
-                  <td className="p-1 sm:p-2 text-nowrap">
-                    {formatBytes(net_out_transfer)} |{" "}
-                    {formatBytes(net_in_transfer)}
-                  </td>
-                  <td className="p-1 sm:p-2 min-w-[55px]">
-                    {uptime / 86400 >= 1
-                      ? `${(uptime / 86400).toFixed(0)} ${"days"}`
-                      : `${(uptime / 3600).toFixed(0)} ${"hours"}`}
-                  </td>
-                  <td className="p-1 sm:p-2">{Number(load_1).toFixed(2)}</td>
-                  <td className="p-1 sm:p-2">
-                    <Badge
-                      className="text-[10px]"
-                      variant={online ? "success" : "destructive"}
-                    >
-                      {online ? "Online" : "Offline"}
-                    </Badge>
-                  </td>
-                </tr>
+                        {online ? "Online" : "Offline"}
+                      </Badge>
+                    </td>
+                  </tr>
+                  {isExpanded && (
+                    <tr className="bg-green-900/10 border-t border-green-800/30">
+                      <td colSpan={10} className="p-2">
+                        <ServerDetails now={messageData.now} server={server} />
+                      </td>
+                    </tr>
+                  )}
+                </>
               );
             })}
           </tbody>
@@ -214,6 +247,62 @@ export default function MonitoringDashboard() {
         <a href={"/dashboard"} className="underline">
           {">Dashboard"}
         </a>
+      </div>
+    </div>
+  );
+}
+
+interface ServerDetailsProps {
+  now: number;
+  server: NezhaServer;
+}
+
+function ServerDetails({ now, server }: ServerDetailsProps) {
+  const {
+    last_active_time_string,
+    platform,
+    platform_version,
+    arch,
+    cpu_info,
+    gpu_info,
+    mem_total,
+    swap_total,
+    disk_total,
+    mem,
+    swap,
+    disk,
+    version,
+    country_code,
+  } = formatNezhaInfo(now, server);
+  return (
+    <div className="flex gap-4 sm:text-xs text-[10px] flex-wrap">
+      <div className="space-y-1">
+        <h3 className="font-bold text-green-400">System Info</h3>
+        <p>Platform: {platform}</p>
+        <p>Kernel: {platform_version || "N/A"}</p>
+        <p>Arch: {arch || "N/A"}</p>
+      </div>
+      <div className="space-y-1">
+        <h3 className="font-bold text-green-400">Hardware Info</h3>
+        <p>CPU Model: {cpu_info.join(", ") || "N/A"}</p>
+        <p>GPU Model: {gpu_info.join(", ") || "N/A"}</p>
+        <p>Memory: {formatBytes(mem_total || 0)}</p>
+        <p>Swap: {formatBytes(swap_total || 0)}</p>
+        <p>Disk: {formatBytes(disk_total || 0)}</p>
+      </div>
+      <div className="space-y-1">
+        <h3 className="font-bold text-green-400">Usage Info</h3>
+        <p>Memory: {formatBytes(mem || 0)}</p>
+        <p>Swap: {formatBytes(swap || 0)}</p>
+        <p>Disk: {formatBytes(disk || 0)}</p>
+        <p>TCP: {server.state.tcp_conn_count || "N/A"}</p>
+        <p>UDP: {server.state.udp_conn_count || "N/A"}</p>
+      </div>
+      <div className="space-y-1">
+        <h3 className="font-bold text-green-400">Agent Info</h3>
+        <p>Version: {version || "N/A"}</p>
+        <p>Last Check-In: {last_active_time_string || "N/A"}</p>
+        <p>Country: {country_code.toUpperCase() || "N/A"}</p>
       </div>
     </div>
   );

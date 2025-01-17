@@ -22,7 +22,7 @@ const Progress = React.forwardRef<
           key={i}
           className={cn(
             "h-2 w-0.5 transition-colors duration-200",
-            isActive ? "bg-green-500" : "bg-green-900/20",
+            isActive ? "bg-green-500" : "bg-green-900/40",
           )}
         />
       ))}
