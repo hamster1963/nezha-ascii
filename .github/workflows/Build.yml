@@ -28,6 +28,11 @@ jobs:
         run: |
           bun run build
 
+      - name: replace _next with assets
+        run: |
+          cd out
+          grep -rl '/_next' * | xargs sed -i 's|/_next|/assets|g'
+
       - name: change output folder name
         run: mv out dist
 
