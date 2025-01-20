@@ -32,6 +32,7 @@ jobs:
         run: |
           cd out
           grep -rl '/_next' * | xargs sed -i 's|/_next|/assets|g'
+          mv _next assets
 
       - name: change output folder name
         run: mv out dist
