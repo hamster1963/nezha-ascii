@@ -7,7 +7,7 @@ import { cn, formatBytes, formatNezhaInfo } from "@/lib/utils";
 import { useWebSocketContext } from "@/lib/websocketProvider";
 import { NezhaServer, NezhaWebsocketResponse } from "@/types/nezha-api";
 import { DateTime } from "luxon";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 
 export default function MonitoringDashboard() {
@@ -16,6 +16,82 @@ export default function MonitoringDashboard() {
 
   const messageData = JSON.parse(message) as NezhaWebsocketResponse;
 
+  const {
+    totalServers,
+    onlineServers,
+    offlineServers,
+    upTotal,
+    downTotal,
+    upSpeed,
+    downSpeed,
+  } = useMemo(() => {
+    if (!messageData || !messageData.servers) {
+      return {
+        totalServers: 0,
+        onlineServers: 0,
+        offlineServers: 0,
+        upTotal: 0,
+        downTotal: 0,
+        upSpeed: 0,
+        downSpeed: 0,
+      };
+    }
+
+    const totalServers = messageData.servers.length || 0;
+    const onlineServers =
+      messageData.servers.filter(
+        (server) => formatNezhaInfo(messageData.now, server).online,
+      )?.length || 0;
+    const offlineServers =
+      messageData.servers.filter(
+        (server) => !formatNezhaInfo(messageData.now, server).online,
+      )?.length || 0;
+
+    const upTotal =
+      messageData.servers.reduce(
+        (total, server) =>
+          formatNezhaInfo(messageData.now, server).online
+            ? total + (server.state?.net_out_transfer ?? 0)
+            : total,
+        0,
+      ) || 0;
+    const downTotal =
+      messageData.servers.reduce(
+        (total, server) =>
+          formatNezhaInfo(messageData.now, server).online
+            ? total + (server.state?.net_in_transfer ?? 0)
+            : total,
+        0,
+      ) || 0;
+
+    const upSpeed =
+      messageData.servers.reduce(
+        (total, server) =>
+          formatNezhaInfo(messageData.now, server).online
+            ? total + (server.state?.net_out_speed ?? 0)
+            : total,
+        0,
+      ) || 0;
+    const downSpeed =
+      messageData.servers.reduce(
+        (total, server) =>
+          formatNezhaInfo(messageData.now, server).online
+            ? total + (server.state?.net_in_speed ?? 0)
+            : total,
+        0,
+      ) || 0;
+
+    return {
+      totalServers,
+      onlineServers,
+      offlineServers,
+      upTotal,
+      downTotal,
+      upSpeed,
+      downSpeed,
+    };
+  }, [messageData]);
+
   if (!messageData || !messageData.servers) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-black text-green-500 p-1 sm:p-2 font-mono text-xs">
@@ -23,50 +99,6 @@ export default function MonitoringDashboard() {
       </div>
     );
   }
-
-  const totalServers = messageData.servers.length || 0;
-  const onlineServers =
-    messageData.servers.filter(
-      (server) => formatNezhaInfo(messageData.now, server).online,
-    )?.length || 0;
-  const offlineServers =
-    messageData.servers.filter(
-      (server) => !formatNezhaInfo(messageData.now, server).online,
-    )?.length || 0;
-
-  const upTotal =
-    messageData.servers.reduce(
-      (total, server) =>
-        formatNezhaInfo(messageData.now, server).online
-          ? total + (server.state?.net_out_transfer ?? 0)
-          : total,
-      0,
-    ) || 0;
-  const downTotal =
-    messageData.servers.reduce(
-      (total, server) =>
-        formatNezhaInfo(messageData.now, server).online
-          ? total + (server.state?.net_in_transfer ?? 0)
-          : total,
-      0,
-    ) || 0;
-
-  const upSpeed =
-    messageData.servers.reduce(
-      (total, server) =>
-        formatNezhaInfo(messageData.now, server).online
-          ? total + (server.state?.net_out_speed ?? 0)
-          : total,
-      0,
-    ) || 0;
-  const downSpeed =
-    messageData.servers.reduce(
-      (total, server) =>
-        formatNezhaInfo(messageData.now, server).online
-          ? total + (server.state?.net_in_speed ?? 0)
-          : total,
-      0,
-    ) || 0;
 
   return (
     <div className="min-h-screen bg-black text-green-500 p-1 sm:p-2 font-mono text-xs">

@@ -32,6 +32,15 @@ export function formatNezhaInfo(now: number, serverInfo: NezhaServer) {
   const lastActiveTime = serverInfo.last_active.startsWith("000")
     ? 0
     : parseISOTimestamp(serverInfo.last_active);
+  const online = now - lastActiveTime <= 30000;
+  const mem = (serverInfo.state.mem_used / serverInfo.host.mem_total) * 100 || 0;
+  const swap = (serverInfo.state.swap_used / serverInfo.host.swap_total) * 100 || 0;
+  const disk = (serverInfo.state.disk_used / serverInfo.host.disk_total) * 100 || 0;
+  const stg = disk;
+  const load_1 = serverInfo.state.load_1?.toFixed(2) || 0.0;
+  const load_5 = serverInfo.state.load_5?.toFixed(2) || 0.0;
+  const load_15 = serverInfo.state.load_15?.toFixed(2) || 0.0;
+
   return {
     ...serverInfo,
     cpu: serverInfo.state.cpu || 0,
@@ -42,15 +51,15 @@ export function formatNezhaInfo(now: number, serverInfo: NezhaServer) {
     last_active_time_string: lastActiveTime
       ? new Date(lastActiveTime).toLocaleString()
       : "",
-    online: now - lastActiveTime <= 30000,
+    online,
     uptime: serverInfo.state.uptime || 0,
     version: serverInfo.host.version || null,
     tcp: serverInfo.state.tcp_conn_count || 0,
     udp: serverInfo.state.udp_conn_count || 0,
-    mem: (serverInfo.state.mem_used / serverInfo.host.mem_total) * 100 || 0,
-    swap: (serverInfo.state.swap_used / serverInfo.host.swap_total) * 100 || 0,
-    disk: (serverInfo.state.disk_used / serverInfo.host.disk_total) * 100 || 0,
-    stg: (serverInfo.state.disk_used / serverInfo.host.disk_total) * 100 || 0,
+    mem,
+    swap,
+    disk,
+    stg,
     country_code: serverInfo.country_code,
     platform: serverInfo.host.platform || "",
     net_out_transfer: serverInfo.state.net_out_transfer || 0,
@@ -63,9 +72,9 @@ export function formatNezhaInfo(now: number, serverInfo: NezhaServer) {
     platform_version: serverInfo.host.platform_version || "",
     cpu_info: serverInfo.host.cpu || [],
     gpu_info: serverInfo.host.gpu || [],
-    load_1: serverInfo.state.load_1?.toFixed(2) || 0.0,
-    load_5: serverInfo.state.load_5?.toFixed(2) || 0.0,
-    load_15: serverInfo.state.load_15?.toFixed(2) || 0.0,
+    load_1,
+    load_5,
+    load_15,
   };
 }
 
