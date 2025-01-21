@@ -12,7 +12,7 @@ import { ChevronDown, ChevronUp } from "lucide-react";
 
 export default function MonitoringDashboard() {
   const { message } = useWebSocketContext();
-  const [expandedServer, setExpandedServer] = useState<string | null>(null);
+  const [expandedServer, setExpandedServer] = useState<number | null>(null);
 
   const messageData = JSON.parse(message) as NezhaWebsocketResponse;
 
@@ -131,7 +131,7 @@ export default function MonitoringDashboard() {
                 load_1,
               } = formatNezhaInfo(messageData.now, server);
 
-              const isExpanded = expandedServer === server.name;
+              const isExpanded = expandedServer === server.id;
 
               return (
                 <>
@@ -142,7 +142,7 @@ export default function MonitoringDashboard() {
                       isExpanded && "bg-green-900/20",
                     )}
                     onClick={() =>
-                      setExpandedServer(isExpanded ? null : server.name)
+                      setExpandedServer(isExpanded ? null : server.id)
                     }
                   >
                     <td className="p-1 sm:p-2 min-w-36">
