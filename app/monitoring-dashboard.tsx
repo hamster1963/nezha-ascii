@@ -268,9 +268,9 @@ function ServerDetails({ now, server }: ServerDetailsProps) {
     mem_total,
     swap_total,
     disk_total,
-    mem,
-    swap,
-    disk,
+    mem_used,
+    swap_used,
+    disk_used,
     version,
     country_code,
   } = formatNezhaInfo(now, server);
@@ -292,9 +292,9 @@ function ServerDetails({ now, server }: ServerDetailsProps) {
       </div>
       <div className="space-y-1">
         <h3 className="font-bold text-green-400">Usage Info</h3>
-        <p>Memory: {formatBytes(mem || 0)}</p>
-        <p>Swap: {formatBytes(swap || 0)}</p>
-        <p>Disk: {formatBytes(disk || 0)}</p>
+        <p>Memory: {formatBytes(mem_used || 0)}</p>
+        <p>Swap: {formatBytes(swap_used || 0)}</p>
+        <p>Disk: {formatBytes(disk_used || 0)}</p>
         <p>TCP: {server.state.tcp_conn_count || "N/A"}</p>
         <p>UDP: {server.state.udp_conn_count || "N/A"}</p>
       </div>
