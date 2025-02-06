@@ -9,12 +9,23 @@ import { NezhaServer, NezhaWebsocketResponse } from "@/types/nezha-api";
 import { DateTime } from "luxon";
 import { useEffect, useState } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
+import React from "react";
 
 export default function MonitoringDashboard() {
   const { message } = useWebSocketContext();
-  const [expandedServer, setExpandedServer] = useState<number | null>(null);
+  const [expandedServers, setExpandedServers] = useState<number[]>([]);
+  const [expandAll, setExpandAll] = useState(false);
 
   const messageData = JSON.parse(message) as NezhaWebsocketResponse;
+
+  useEffect(() => {
+    if (expandAll && messageData?.servers) {
+      const allServerIds = messageData.servers.map((server) => server.id);
+      setExpandedServers(allServerIds);
+    } else if (!expandAll) {
+      setExpandedServers([]);
+    }
+  }, [expandAll]);
 
   if (!messageData || !messageData.servers) {
     return (
@@ -99,6 +110,24 @@ export default function MonitoringDashboard() {
 
       {/* Main Table */}
       <div className="border border-green-800 rounded overflow-x-auto">
+        <div className="p-2 border-b border-green-800 flex justify-end">
+          <button
+            onClick={() => setExpandAll(!expandAll)}
+            className="flex items-center gap-1 text-green-500 hover:text-green-400 transition-colors"
+          >
+            {expandAll ? (
+              <>
+                <ChevronUp className="w-3 h-3" />
+                Collapse All
+              </>
+            ) : (
+              <>
+                <ChevronDown className="w-3 h-3" />
+                Expand All
+              </>
+            )}
+          </button>
+        </div>
         <table className="w-full text-left text-[10px] sm:text-xs">
           <thead>
             <tr className="bg-green-900/20">
@@ -131,19 +160,25 @@ export default function MonitoringDashboard() {
                 load_1,
               } = formatNezhaInfo(messageData.now, server);
 
-              const isExpanded = expandedServer === server.id;
+              const isExpanded = expandedServers.includes(server.id);
 
               return (
-                <>
+                <React.Fragment key={server.id}>
                   <tr
-                    key={server.name}
                     className={cn(
                       "border-t border-green-800/30 cursor-pointer hover:bg-green-900/10",
                       isExpanded && "bg-green-900/20",
                     )}
-                    onClick={() =>
-                      setExpandedServer(isExpanded ? null : server.id)
-                    }
+                    onClick={() => {
+                      if (isExpanded) {
+                        setExpandedServers((prev) =>
+                          prev.filter((id) => id !== server.id),
+                        );
+                      } else {
+                        setExpandedServers((prev) => [...prev, server.id]);
+                      }
+                      setExpandAll(false);
+                    }}
                   >
                     <td className="p-1 sm:p-2 min-w-36">
                       <div className="flex items-center gap-1">
@@ -225,7 +260,7 @@ export default function MonitoringDashboard() {
                       </td>
                     </tr>
                   )}
-                </>
+                </React.Fragment>
               );
             })}
           </tbody>
